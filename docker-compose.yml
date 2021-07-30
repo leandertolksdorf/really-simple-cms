@@ -1,0 +1,23 @@
+version: "3.7"
+services:
+  really_simple_cms:
+    container_name: really_simple_cms
+    build: .
+    volumes:
+      - ./src:/usr/src/app
+    ports:
+      - "8080:8080"
+    links:
+      - really_simple_cms__db
+    environment:
+      - dev=1
+      - db_service_name=my_service_db
+      - db_name=example_db
+      - db_retry_time=3000
+  really_simple_cms__db:
+    container_name: really_simple_cms
+    image: mongo
+    volumes:
+      - ./db:/data/db
+    ports:
+      - "27017:27017"
