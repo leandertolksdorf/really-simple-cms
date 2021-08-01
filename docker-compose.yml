@@ -1,23 +1,57 @@
-version: "3.7"
+version: '3.7'
+
 services:
-  really_simple_cms:
-    container_name: really_simple_cms
-    build: .
+  really_simple_cms__server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: really-simple-cms-server
+    container_name: really-simple-cms-server
+    command: /usr/src/app/node_modules/.bin/nodemon server.js
     volumes:
-      - ./src:/usr/src/app
+      - ./server/:/usr/src/app
+      - /usr/src/app/node_modules
     ports:
-      - "8080:8080"
-    links:
+      - "5000:5000"
+    depends_on:
       - really_simple_cms__db
+    env_file: ./server/.env
     environment:
-      - dev=1
-      - db_service_name=my_service_db
-      - db_name=example_db
-      - db_retry_time=3000
+      - NODE_ENV=development
+    networks:
+      - app-network
   really_simple_cms__db:
-    container_name: really_simple_cms
     image: mongo
     volumes:
-      - ./db:/data/db
+      - data-volume:/data/db
     ports:
       - "27017:27017"
+    networks:
+      - app-network
+  really_simple_cms__client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    image: really-simple-cms-client
+    container_name: really-simple-cms-client
+    command: npm start
+    volumes:
+      - ./client/:/usr/app
+      - /usr/app/node_modules
+    depends_on:
+      - really_simple_cms__server
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+
+networks:
+    app-network:
+        driver: bridge
+
+volumes:
+    data-volume:
+    node_modules:
+    web-root:
+      driver: local
